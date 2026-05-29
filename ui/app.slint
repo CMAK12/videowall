@@ -1,0 +1,89 @@
+import { LineEdit, TextEdit, Button, VerticalBox, HorizontalBox } from "std-widgets.slint";
+
+export component AppWindow inherits Window {
+    title: "videowall";
+    preferred-width: 600px;
+    preferred-height: 550px;
+
+    in-out property <bool> is-playing: false;
+    in-out property <image> video-frame;
+    in-out property <string> error-text: "";
+    in-out property <string> token-text: "";
+    in-out property <string> body-text: "";
+
+    callback play(string, string);
+    callback stop();
+    callback paste-token();
+    callback paste-body();
+
+    VerticalBox {
+        if root.error-text != "": Text {
+            text: root.error-text;
+            color: red;
+            wrap: word-wrap;
+        }
+
+        if !root.is-playing: VerticalBox {
+            padding: 0;
+
+            Text { text: "Token"; }
+            HorizontalBox {
+                padding: 0;
+                LineEdit {
+                    placeholder-text: "Enter token";
+                    text <=> root.token-text;
+                    horizontal-stretch: 1;
+                }
+                Button {
+                    text: "Paste";
+                    clicked => { root.paste-token(); }
+                }
+            }
+
+            Text { text: "Body"; }
+            TextEdit {
+                vertical-stretch: 1;
+                text <=> root.body-text;
+                placeholder-text:
+                    "{\n" +
+                    "  \"participantName\": \"\",\n" +
+                    "  \"edgeId\": \"\",\n" +
+                    "  \"cameraId\": \"\",\n" +
+                    "  \"resolution\": 0,\n" +
+                    "  \"errorCounter\": 0\n" +
+                    "}";
+            }
+
+            HorizontalBox {
+                padding: 0;
+                alignment: end;
+                Button {
+                    text: "Paste Body";
+                    clicked => { root.paste-body(); }
+                }
+                Button {
+                    text: "Play";
+                    clicked => { root.play(root.token-text, root.body-text); }
+                }
+            }
+        }
+
+        if root.is-playing: VerticalBox {
+            padding: 0;
+            Image {
+                source: root.video-frame;
+                vertical-stretch: 1;
+                horizontal-stretch: 1;
+                image-fit: contain;
+            }
+            HorizontalBox {
+                padding: 0;
+                alignment: end;
+                Button {
+                    text: "Stop";
+                    clicked => { root.stop(); }
+                }
+            }
+        }
+    }
+}
