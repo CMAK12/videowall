@@ -6,7 +6,9 @@
 pub mod errors;
 pub mod play_stream;
 pub mod ports;
+pub mod yuv_frame;
 
 pub use errors::AppError;
 pub use play_stream::PlayStreamUseCase;
 pub use ports::{FrameSink, LiveKitSession, SessionHandle, TokenExchange};
+pub use yuv_frame::YuvFrame;
