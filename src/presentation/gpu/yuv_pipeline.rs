@@ -95,7 +95,12 @@ impl YuvPipeline {
             ..Default::default()
         });
 
-        Self { pipeline, bgl, sampler, inputs: None }
+        Self {
+            pipeline,
+            bgl,
+            sampler,
+            inputs: None,
+        }
     }
 
     /// Upload planes, run the YUV→RGB pass, and return the output RGBA8 texture.
@@ -110,9 +115,27 @@ impl YuvPipeline {
         self.ensure_inputs(device, frame.width, frame.height);
         let inputs = self.inputs.as_ref().expect("inputs ensured above");
 
-        upload_plane(queue, &inputs.y, &frame.y_plane, frame.y_stride, frame.height);
-        upload_plane(queue, &inputs.u, &frame.u_plane, frame.u_stride, frame.chroma_height());
-        upload_plane(queue, &inputs.v, &frame.v_plane, frame.v_stride, frame.chroma_height());
+        upload_plane(
+            queue,
+            &inputs.y,
+            &frame.y_plane,
+            frame.y_stride,
+            frame.height,
+        );
+        upload_plane(
+            queue,
+            &inputs.u,
+            &frame.u_plane,
+            frame.u_stride,
+            frame.chroma_height(),
+        );
+        upload_plane(
+            queue,
+            &inputs.v,
+            &frame.v_plane,
+            frame.v_stride,
+            frame.chroma_height(),
+        );
 
         let output = device.create_texture(&wgpu::TextureDescriptor {
             label: Some("yuv_output"),
@@ -165,7 +188,13 @@ impl YuvPipeline {
                 return;
             }
         }
-        self.inputs = Some(InputTextures::new(device, &self.bgl, &self.sampler, width, height));
+        self.inputs = Some(InputTextures::new(
+            device,
+            &self.bgl,
+            &self.sampler,
+            width,
+            height,
+        ));
     }
 }
 
@@ -192,14 +221,33 @@ impl InputTextures {
             label: Some("yuv_bind_group"),
             layout: bgl,
             entries: &[
-                wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::Sampler(sampler) },
-                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(&y_view) },
-                wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::TextureView(&u_view) },
-                wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::TextureView(&v_view) },
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::Sampler(sampler),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::TextureView(&y_view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: wgpu::BindingResource::TextureView(&u_view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 3,
+                    resource: wgpu::BindingResource::TextureView(&v_view),
+                },
             ],
         });
 
-        Self { width, height, y, u, v, bind_group }
+        Self {
+            width,
+            height,
+            y,
+            u,
+            v,
+            bind_group,
+        }
     }
 }
 
@@ -224,7 +272,11 @@ fn create_plane_texture(
 ) -> wgpu::Texture {
     device.create_texture(&wgpu::TextureDescriptor {
         label: Some(label),
-        size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        size: wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        },
         mip_level_count: 1,
         sample_count: 1,
         dimension: wgpu::TextureDimension::D2,
@@ -234,13 +286,7 @@ fn create_plane_texture(
     })
 }
 
-fn upload_plane(
-    queue: &wgpu::Queue,
-    texture: &wgpu::Texture,
-    data: &[u8],
-    stride: u32,
-    rows: u32,
-) {
+fn upload_plane(queue: &wgpu::Queue, texture: &wgpu::Texture, data: &[u8], stride: u32, rows: u32) {
     let size = texture.size();
     queue.write_texture(
         wgpu::TexelCopyTextureInfo {

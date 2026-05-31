@@ -22,7 +22,12 @@ impl UiFrameSink {
         queue: Arc<wgpu::Queue>,
         pipeline: Arc<Mutex<YuvPipeline>>,
     ) -> Self {
-        Self { weak, device, queue, pipeline }
+        Self {
+            weak,
+            device,
+            queue,
+            pipeline,
+        }
     }
 }
 

@@ -116,12 +116,8 @@ pub fn run() -> Result<(), slint::PlatformError> {
             }
 
             rt_handle.spawn(async move {
-                let sink: Box<dyn FrameSink> = Box::new(UiFrameSink::new(
-                    weak.clone(),
-                    device,
-                    queue,
-                    pipeline_arc,
-                ));
+                let sink: Box<dyn FrameSink> =
+                    Box::new(UiFrameSink::new(weak.clone(), device, queue, pipeline_arc));
                 match use_case.play(token, body, sink).await {
                     Ok(handle) => {
                         *session.lock().await = Some(handle);
@@ -173,7 +169,7 @@ pub fn run() -> Result<(), slint::PlatformError> {
             let session = session.clone();
             rt_handle.spawn(async move {
                 if let Some(handle) = session.lock().await.take() {
-                    let _ = handle.cancel.send(());
+                    handle.stop().await;
                 }
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(app) = weak.upgrade() {
