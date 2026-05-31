@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use tokio::sync::oneshot;
 
-use crate::application::AppError;
+use crate::application::{AppError, YuvFrame};
 use crate::domain::{BearerToken, LiveKitCredentials, RequestBody};
 
 #[async_trait]
@@ -14,7 +14,7 @@ pub trait TokenExchange: Send + Sync + 'static {
 }
 
 pub trait FrameSink: Send + Sync + 'static {
-    fn submit_frame(&self, width: u32, height: u32, pixels: &[u8]);
+    fn submit_frame(&self, frame: YuvFrame);
 }
 
 #[async_trait]

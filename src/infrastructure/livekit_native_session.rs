@@ -4,14 +4,12 @@ use async_trait::async_trait;
 use futures::StreamExt;
 use livekit::track::RemoteTrack;
 use livekit::webrtc::prelude::VideoBuffer;
-use livekit::webrtc::video_frame::native::VideoFrameBufferExt;
-use livekit::webrtc::video_frame::{VideoFormatType, VideoFrame};
+use livekit::webrtc::video_frame::VideoFrame;
 use livekit::webrtc::video_stream::native::NativeVideoStream;
 use livekit::{Room, RoomEvent, RoomOptions};
-use slint::{Rgba8Pixel, SharedPixelBuffer};
 use tokio::sync::oneshot;
 
-use crate::application::{AppError, FrameSink, LiveKitSession, SessionHandle};
+use crate::application::{AppError, FrameSink, LiveKitSession, SessionHandle, YuvFrame};
 use crate::domain::LiveKitCredentials;
 
 pub struct LiveKitNativeSession;
@@ -74,32 +72,26 @@ impl LiveKitSession for LiveKitNativeSession {
 
 async fn drain_video(track: livekit::track::RemoteVideoTrack, sink: Arc<dyn FrameSink>) {
     let mut stream = NativeVideoStream::new(track.rtc_track());
-    let mut buf: Option<SharedPixelBuffer<Rgba8Pixel>> = None;
 
     while let Some(VideoFrame { buffer, .. }) = stream.next().await {
         let i420 = buffer.to_i420();
-        let w = i420.width();
-        let h = i420.height();
+        let width = i420.width();
+        let height = i420.height();
+        let (stride_y, stride_u, stride_v) = i420.strides();
+        let (y, u, v) = i420.data();
 
-        let needs_alloc = match &buf {
-            Some(pb) => pb.width() != w || pb.height() != h,
-            None => true,
+        let frame = YuvFrame {
+            width,
+            height,
+            y_plane: y.to_vec(),
+            u_plane: u.to_vec(),
+            v_plane: v.to_vec(),
+            y_stride: stride_y,
+            u_stride: stride_u,
+            v_stride: stride_v,
         };
-        if needs_alloc {
-            buf = Some(SharedPixelBuffer::<Rgba8Pixel>::new(w, h));
-        }
-        let pb = buf.as_mut().expect("buffer just allocated");
 
-        let dst_stride = w * 4;
-        i420.to_argb(
-            VideoFormatType::RGBA,
-            pb.make_mut_bytes(),
-            dst_stride,
-            w as i32,
-            h as i32,
-        );
-
-        sink.submit_frame(w, h, pb.as_bytes());
+        sink.submit_frame(frame);
     }
 
     log::info!("video drain loop exited");
