@@ -69,10 +69,6 @@ cargo fmt
 ├── Cargo.toml
 ├── README.md
 ├── build.rs
-├── docs/
-│   └── superpowers/
-│       └── plans/
-│           └── 2026-05-30-gpu-yuv-rendering.md
 ├── src/
 │   ├── application/
 │   │   ├── errors.rs
