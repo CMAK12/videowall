@@ -180,11 +180,6 @@ Slint UI integration and GPU presentation code.
 - `src/presentation/gpu/yuv_to_rgb.wgsl`: WGSL shader for fullscreen-triangle
   rendering and BT.601 limited-range YUV-to-RGB conversion.
 
-### `docs/`
-
-- `docs/superpowers/plans/2026-05-30-gpu-yuv-rendering.md`: Development plan
-  notes for the GPU YUV rendering work.
-
 ## Architecture Notes
 
 The code is organized in layers:
